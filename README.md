@@ -1,73 +1,98 @@
-# React + TypeScript + Vite
+# 🌌 NextGen AI - Futuristic Customer Support Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
 
-Currently, two official plugins are available:
+NextGen AI is a cutting-edge, high-performance portfolio website showcasing an advanced AI Customer Support solution. Built with a futuristic dark-mode aesthetic, it features glassmorphism, glowing neon accents, and smooth cinematic animations to deliver a premium user experience.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **🚀 Cinematic Hero Section**: An immersive introduction with animated background orbs and sleek typography.
+- **🧪 Problem vs. Solution**: A side-by-side comparison highlighting the shift from traditional support to AI-driven efficiency.
+- **💬 Interactive Chat Demo**: A fully functional UI simulation of the AI assistant in action.
+- **📊 Analytics Dashboard**: A glass-morphic dashboard mockup featuring live charts and key performance metrics powered by `Recharts`.
+- **🛠️ Technical Architecture**: A visual breakdown of the system's internal workings and data flow.
+- **⚡ Performance First**: Zero-lag animations and instant interactions using Framer Motion and optimized React components.
+- **📱 Fully Responsive**: Seamless experience across mobile, tablet, and desktop devices.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Frontend**: [React 19](https://react.dev/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) (v4 compatible)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Type Safety**: [TypeScript](https://www.typescriptlang.org/)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally:
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/nextgen-ai.git
+cd nextgen-ai
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Install dependencies
+```bash
+npm install
 ```
+
+### 3. Run the development server
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`.
+
+---
+
+## 📂 Project Structure
+
+```text
+src/
+├── components/          # Reusable UI components
+│   ├── ArchitectureDiagram.tsx
+│   ├── ChatDemo.tsx
+│   ├── DashboardMockup.tsx
+│   ├── FeatureHighlight.tsx
+│   ├── Hero.tsx
+│   └── ...
+├── lib/                 # Utility functions and shared logic
+│   └── utils.ts
+├── App.tsx              # Main application entry point
+├── index.css            # Global styles and Tailwind directives
+└── main.tsx             # React root mounting
+```
+
+---
+
+## 🎨 Design Philosophy
+
+The design is centered around **Dark Elegance** and **Technological Sophistication**:
+- **Palette**: Deep blacks (`#000000`), cyan glows, and purple accents.
+- **Glassmorphism**: Transparent, blurred backgrounds for cards and navbars to create depth.
+- **Micro-interactions**: Subtle hover states and scroll-triggered animations to keep the user engaged.
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+<p align="center">
+  Built with ❤️ by Farhan Tariq
+</p>
