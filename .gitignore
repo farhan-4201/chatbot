@@ -105,3 +105,20 @@ dist-ssr/
 
 # Qodo / Codium cache
 .qodo/
+
+# Backend specific
+backend/node_modules/
+backend/dist/
+backend/data/
+data/
+
+# NextGen AI Specific
+chat_history.json
+*.json.bak
+
+# Temp & Cache
+.cache/
+temp/
+tmp/
+*.tmp
+*.bak

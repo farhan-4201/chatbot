@@ -1,27 +1,59 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { LayoutDashboard, Sparkles, Bell, Search, Settings } from 'lucide-react';
-
-const analyticsData = [
-  { name: 'Mon', leads: 400, conv: 240 },
-  { name: 'Tue', leads: 300, conv: 139 },
-  { name: 'Wed', leads: 600, conv: 380 },
-  { name: 'Thu', leads: 800, conv: 490 },
-  { name: 'Fri', leads: 500, conv: 390 },
-  { name: 'Sat', leads: 400, conv: 200 },
-  { name: 'Sun', leads: 300, conv: 150 },
-];
-
-const distributionData = [
-  { name: 'Hot', value: 45, color: '#ff00e5' },
-  { name: 'Warm', value: 30, color: '#ff8a00' },
-  { name: 'Cold', value: 25, color: '#0066ff' },
-];
+import api from '../lib/api';
 
 const DashboardMockup = () => {
+  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [distributionData, setDistributionData] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [analyticsRes, distributionRes, statsRes] = await Promise.all([
+          api.dashboard.getAnalytics(),
+          api.dashboard.getDistribution(),
+          api.dashboard.getStats()
+        ]);
+
+        setAnalyticsData(analyticsRes.analyticsData || []);
+        setDistributionData(distributionRes.distributionData || []);
+        setStats(statsRes.stats || []);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Fallback to default data
+        setAnalyticsData([
+          { name: 'Mon', leads: 400, conv: 240 },
+          { name: 'Tue', leads: 300, conv: 139 },
+          { name: 'Wed', leads: 600, conv: 380 },
+          { name: 'Thu', leads: 800, conv: 490 },
+          { name: 'Fri', leads: 500, conv: 390 },
+          { name: 'Sat', leads: 400, conv: 200 },
+          { name: 'Sun', leads: 300, conv: 150 },
+        ]);
+        setDistributionData([
+          { name: 'Hot', value: 45, color: '#ff00e5' },
+          { name: 'Warm', value: 30, color: '#ff8a00' },
+          { name: 'Cold', value: 25, color: '#0066ff' },
+        ]);
+        setStats([
+          { label: "AI Response Quality", value: "98.4%", color: "text-primary" },
+          { label: "Lead Capture Rate", value: "+215%", color: "text-accent" },
+          { label: "Avg. Latency", value: "0.12s", color: "text-secondary" },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <div className="container-tight relative">
       <div className="flex flex-col lg:flex-row gap-16 items-start">
@@ -38,11 +70,7 @@ const DashboardMockup = () => {
           </p>
           
           <div className="space-y-4">
-             {[
-               { label: "AI Response Quality", value: "98.4%", color: "text-primary" },
-               { label: "Lead Capture Rate", value: "+215%", color: "text-accent" },
-               { label: "Avg. Latency", value: "0.12s", color: "text-secondary" },
-             ].map((stat, i) => (
+             {stats.map((stat, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl border-white/5 flex items-center justify-between">
                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.label}</span>
                    <span className={`text-xl font-display font-black ${stat.color}`}>{stat.value}</span>

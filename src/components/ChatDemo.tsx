@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Command, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
+import api from '../lib/api';
 
 const INITIAL_MESSAGES = [
   { role: 'bot', text: "Welcome to NextGen AI. I'm currently analyzing your visitor profile for real-time lead qualification. How can I assist you?" },
@@ -26,7 +27,7 @@ const ChatDemo = () => {
     }
   }, [messages, isTyping]);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     if (!text.trim() || isTyping) return;
     
     setMessages(prev => [...prev, { role: 'user', text }]);
@@ -34,26 +35,21 @@ const ChatDemo = () => {
     setIsTyping(true);
     setActiveIntent("Analyzing...");
 
-    // Simulate AI response with intent detection logic
-    setTimeout(() => {
-      let response = "Our proprietary neural engine processes natural language with 98% accuracy to ensure your sales team only focuses on high-intent prospects.";
-      let intent = "Platform Inquiry";
-
-      if (text.toLowerCase().includes('score')) {
-        response = "Lead scoring is dynamic. We use behavioral patterns, referral source, and real-time sentiment analysis to assign a temperature: Hot, Warm, or Cold.";
-        intent = "Feature: Lead Scoring";
-      } else if (text.toLowerCase().includes('model') || text.toLowerCase().includes('tech')) {
-        response = "We utilize a custom fine-tuned GPT-4o model combined with vector embeddings (RAG) to ensure zero hallucinations and extreme business-specific knowledge.";
-        intent = "Architecture: RAG + GPT-4o";
-      } else if (text.toLowerCase().includes('pricing')) {
-        response = "Enterprise plans are tailored to your volume. Typically starting at $499/mo with dedicated AI model training and 24/7 priority support.";
-        intent = "Sales: Enterprise";
-      }
+    try {
+      const response = await api.chat.send(text);
       
-      setMessages(prev => [...prev, { role: 'bot', text: response }]);
+      setMessages(prev => [...prev, { role: 'bot', text: response.response }]);
+      setActiveIntent(response.intent);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, { 
+        role: 'bot', 
+        text: 'Sorry, I encountered an error processing your request. Please try again.' 
+      }]);
+      setActiveIntent('Error');
+    } finally {
       setIsTyping(false);
-      setActiveIntent(intent);
-    }, 1800);
+    }
   };
 
   return (
