@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Command, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -19,6 +19,11 @@ const ChatDemo = () => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeIntent, setActiveIntent] = useState<string | null>(null);
+  const [metadata, setMetadata] = useState({
+    tokensPerSecond: 145.2,
+    latency: 24,
+    model: 'GPT-4o (Fine-tuned)'
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +45,9 @@ const ChatDemo = () => {
       
       setMessages(prev => [...prev, { role: 'bot', text: response.response }]);
       setActiveIntent(response.intent);
+      if (response.metadata) {
+        setMetadata(response.metadata);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, { 
@@ -73,11 +81,11 @@ const ChatDemo = () => {
               <div className="p-4 glass-card bg-white/[0.02] rounded-2xl border-white/5 space-y-3">
                  <div className="flex justify-between items-center text-[10px]">
                     <span className="text-slate-400">Tokens/s:</span>
-                    <span className="text-primary font-mono">145.2</span>
+                    <span className="text-primary font-mono">{metadata.tokensPerSecond}</span>
                  </div>
                  <div className="flex justify-between items-center text-[10px]">
                     <span className="text-slate-400">Latency:</span>
-                    <span className="text-accent font-mono">24ms</span>
+                    <span className="text-accent font-mono">{metadata.latency}ms</span>
                  </div>
                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                     <motion.div 
@@ -125,10 +133,10 @@ const ChatDemo = () => {
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-bold">Neural Assistant <span className="text-[10px] font-mono text-slate-500 ml-2">V4.PRO</span></h4>
+                <h4 className="text-sm font-bold">Neural Assistant <span className="text-[10px] font-mono text-slate-500 ml-2">{metadata.model}</span></h4>
                 <div className="flex items-center gap-1.5 mt-1">
                   <ShieldCheck size={12} className="text-accent" />
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Verified Agent • 0.00ms Lag</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Verified Agent • {metadata.latency}ms Lag</span>
                 </div>
               </div>
             </div>

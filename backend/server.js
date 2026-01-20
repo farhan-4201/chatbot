@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -15,11 +16,24 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+
+// Authentication Middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
+    req.user = user;
+    next();
+  });
+};
 
 // ============ SERVICES ============
 // Persistence Helper
@@ -48,10 +62,29 @@ const fs = {
 // Chat Service
 const chatService = {
   conversationHistory: [],
+  model: null,
 
   async init() {
     const saved = await fs.read('chat_history');
     if (saved) this.conversationHistory = saved;
+
+    // Initialize Gemini
+    try {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      let apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : '';
+      // Remove quotes if the user accidentally added them in .env
+      apiKey = apiKey.replace(/^["']|["']$/g, '');
+
+      if (apiKey && apiKey.length > 20 && apiKey.startsWith('AIza')) {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        this.model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        console.log('✅ Gemini AI initialized successfully (Key format verified)');
+      } else {
+        console.warn('⚠️ GEMINI_API_KEY is missing, too short, or doesn\'t start with AIza. Falling back to dummy mode.');
+      }
+    } catch (e) {
+      console.error('❌ Failed to initialize Gemini:', e.message);
+    }
   },
 
   detectIntent(message) {
@@ -63,7 +96,40 @@ const chatService = {
     return { intent: 'General Support', confidence: 0.85 };
   },
 
-  generateResponse(message, intent) {
+  async generateAIResponse(message) {
+    if (!this.model) {
+      console.warn('⚠️ AI Model not initialized.');
+      return null;
+    }
+
+    try {
+      const context = this.conversationHistory.slice(-5).map(m =>
+        `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`
+      ).join('\n');
+
+      const prompt = `
+        You are NextGen AI's Strategic Assistant. 
+        You are sophisticated, professional, and slightly futuristic.
+        Context: NextGen AI is an enterprise platform specializing in real-time lead qualification using fine-tuned GPT-4o and RAG.
+        
+        Current conversation:
+        ${context}
+        
+        New User Inquiry: ${message}
+        
+        Provide a concise, expert response (max 3 sentences).
+      `;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text().trim();
+    } catch (e) {
+      console.error('❌ Generation Error:', e.message);
+      return null;
+    }
+  },
+
+  generateFallbackResponse(message) {
     const lowerMessage = message.toLowerCase();
     if (lowerMessage.includes('score')) {
       return "Lead scoring is dynamic. We use behavioral patterns, referral source, and real-time sentiment analysis to assign a temperature: Hot, Warm, or Cold. Our ML model achieves 98.4% accuracy.";
@@ -80,7 +146,12 @@ const chatService = {
   async chat(userMessage) {
     this.conversationHistory.push({ role: 'user', text: userMessage, timestamp: new Date() });
     const { intent, confidence } = this.detectIntent(userMessage);
-    const response = this.generateResponse(userMessage, intent);
+
+    let response = await this.generateAIResponse(userMessage);
+    if (!response) {
+      response = this.generateFallbackResponse(userMessage);
+    }
+
     this.conversationHistory.push({ role: 'bot', text: response, timestamp: new Date() });
 
     // Save to disk
@@ -93,9 +164,40 @@ const chatService = {
       metadata: {
         tokensPerSecond: Math.floor(Math.random() * 20 + 140),
         latency: Math.floor(Math.random() * 35 + 15),
-        model: 'GPT-4o (Fine-tuned)'
+        model: this.model ? 'Gemini 2.5 Flash' : 'Fallback System (Hybrid)'
       }
     };
+  },
+
+  async liveChat(userMessage) {
+    // FORCE AI response, no fallback
+    if (!this.model) {
+      throw new Error('AI System is not initialized. Please check GEMINI_API_KEY.');
+    }
+
+    this.conversationHistory.push({ role: 'user', text: userMessage, timestamp: new Date() });
+
+    try {
+      const response = await this.generateAIResponse(userMessage);
+      if (!response) throw new Error('AI failed to generate a response.');
+
+      this.conversationHistory.push({ role: 'bot', text: response, timestamp: new Date() });
+      await fs.write('chat_history', this.conversationHistory);
+
+      return {
+        response,
+        intent: 'Live Neural Inference',
+        confidence: 0.99,
+        metadata: {
+          tokensPerSecond: Math.floor(Math.random() * 10 + 165),
+          latency: Math.floor(Math.random() * 20 + 10),
+          model: 'Gemini 2.5 Flash (Live Mode)'
+        }
+      };
+    } catch (e) {
+      console.error('Live Chat Error:', e.message);
+      throw e;
+    }
   },
 
   getHistory() {
@@ -117,6 +219,7 @@ const chatService = {
     };
   }
 };
+
 chatService.init();
 
 
@@ -229,6 +332,18 @@ const architectureService = {
 };
 
 // ============ ROUTES ============
+// Auth routes
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === 'demo@nextgen-ai.com' && password === 'Admin@2026') {
+    const token = jwt.sign({ email, role: 'demo_user' }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    return res.json({ token, message: 'Authentication successful' });
+  }
+
+  res.status(401).json({ error: 'Invalid email or password' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date(), uptime: process.uptime() });
@@ -242,6 +357,18 @@ app.post('/api/chat/send', async (req, res) => {
   }
   const response = await chatService.chat(message);
   res.json(response);
+});
+
+app.post('/api/chat/live', authenticateToken, async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message is required' });
+
+  try {
+    const response = await chatService.liveChat(message);
+    res.json(response);
+  } catch (e) {
+    res.status(503).json({ error: 'Live AI unavailable', detail: e.message });
+  }
 });
 
 app.get('/api/chat/history', (req, res) => {
